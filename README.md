@@ -1,3 +1,4 @@
+<img width="844" alt="Screenshot 2024-10-20 at 11 07 18" src="https://github.com/user-attachments/assets/fa73f3c9-1b3b-4cf3-801a-ed3b91c3d48d">
 
 ### Ekatra
 

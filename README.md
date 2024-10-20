@@ -27,6 +27,7 @@ A personalized learning system powered by AI with extensive course flexibility.
 
 - **AI-Generated Courses**: Backed by **Meta 3.2** with a **90B Vision Instruct** model, learners can study any topic.
 - **Fine-tuned Content**: Courses are curated from trusted sources such as **NCERT/NPTEL** using **Llama 3.1 8B Instruct** model.
+- **Dataset**: Custom generated on textbooks, generated 20k rows https://huggingface.co/datasets/iabheejit/socrates-nptel
 
 ### 3. Edge Llama Access
 An offline-ready model that allows course access and learning without the need for constant internet connectivity.

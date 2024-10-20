@@ -42,5 +42,8 @@ An offline-ready model that allows course access and learning without the need f
 - **Meta 3.2 Vision Instruct**: A large language model fine-tuned for educational content generation.
 - **Llama Models**: Llama 3.1 and 3.2 models offering inference capabilities for both online and offline use.
 
+<img width="835" alt="image" src="https://github.com/user-attachments/assets/74d5b613-5313-431f-9e43-2f8d50f6306c">
+
+
 ## How to Contribute
 Contributions are welcome! If you want to help improve these learning tools, feel free to open issues or submit pull requests.

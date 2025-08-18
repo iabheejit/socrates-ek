@@ -197,7 +197,7 @@ const get_student_table_send_remainder = async () => {
     }
 }
 
-const setDountBit = async (waId, doubtBit,Title) => {
+const setDoubtBit = async (waId, doubtBit,Title) => {
     var base = new Airtable({ apiKey: process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN }).base(process.env.AIRTABLE_STUDENT_BASE_ID);
     try {
         console.log("Setting doubt bit....");
@@ -293,7 +293,7 @@ webApp.post('/cop', async (req, res) => {
             const record = records[0];
             const { Phone, Topic, Name, Goal, Style, Language, "Next Day": NextDay, "Next Module": NextModule,"Doubt":Doubt } = record;
             //set doubt bit to true;
-            setDountBit(event.waId,1,Topic);
+            setDoubtBit(event.waId,1,Topic);
         } catch (error) {
             console.error("Failed getting approved data", error);
         }
@@ -305,7 +305,7 @@ webApp.post('/cop', async (req, res) => {
             const record = records[0];
             const { Phone, Topic, Name, Goal, Style, Language, "Next Day": NextDay, "Next Module": NextModule,"Doubt":Doubt } = record;
             //set doubt bit to true;
-            setDountBit(event.waId,0,Topic);
+            setDoubtBit(event.waId,0,Topic);
         } catch (error) {
             console.error("Failed getting approved data", error);
         }

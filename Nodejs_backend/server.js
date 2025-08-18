@@ -248,8 +248,9 @@ const getDoubtBit = async (waId,Title) => {
             return; // Exit early if no records are found
         }
 
-        
-        return record.fields.Doubt;
+        const record = records[0];
+
+        return record?.fields?.Doubt;
 
     } catch (error) {
         console.error("getdoubtbit fucntion: Failed to update record", error);

@@ -118,6 +118,74 @@ const totalDays = async (number) => {
 };
 
 
+async function markDayComplete(number) {
+    try {
+        const url = `https://api.airtable.com/v0/${base_student}/${student_table}`;
+        const params = new URLSearchParams({
+            filterByFormula: `({Phone} = "${number}")`,
+            view: 'Grid view'
+        });
+
+        const response = await fetch(`${url}?${params}`, {
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.records || data.records.length === 0) {
+            console.log("No records found for the given number");
+            return;
+        }
+
+        const record = data.records[0];
+        const id = record.id;
+        const name = record.fields.Name;
+        const comp_day = Number(record.fields["Next Day"]);
+        const nextDay = comp_day + 1;
+
+        const total_days = await module.exports.totalDays(number);
+
+        if (comp_day <= total_days) {
+            console.log("Entered markDayComplete");
+
+            const updateFields = {
+                "Next Day": nextDay,
+                "Day Completed": comp_day,
+                "Next Module": 1,
+                "Module Completed": 0
+            };
+
+            const updateResponse = await fetch(`${url}/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ fields: updateFields })
+            });
+
+            if (!updateResponse.ok) {
+                throw new Error(`HTTP error! status: ${updateResponse.status}`);
+            }
+
+            console.log("Complete Day " + comp_day);
+
+            if (nextDay == total_days + 1) {
+                console.log("Executing Outro for ", name, nextDay);
+            }
+        }
+    } catch (error) {
+        console.error('Error in markDayComplete:', error);
+    }
+}
+
 const findTable = async (number) => {
 
     const url = `https://api.airtable.com/v0/${base_student}/${student_table}`;
@@ -998,7 +1066,7 @@ async function update_internal_student_record(student_id, last_msg) {
 
 }
 
-async function update_student_record(student_id, course_name) {
+async function update_student_record_v2(student_id, course_name) {
     let data = JSON.stringify(
         {
             fields: {
@@ -1116,6 +1184,7 @@ async function ListCourseFields(course_name) {
 }
 
 module.exports = {
+    markDayComplete,
     createTable, create_record, create_student_record, find_student_record, update_student_record, findTable,
     totalDays,
     updateField,
@@ -1129,10 +1198,10 @@ module.exports = {
     findField,
     findAns,
     find_ContentField,
-    existingStudents
-    , find_alfred_course_record
-    , create_course_record
-    , updateAlfredData,
+    existingStudents,
+    find_alfred_course_record,
+    create_course_record,
+    updateAlfredData,
     updateCourseTable,
     ListCourseFields,
     existingStudents_internal,

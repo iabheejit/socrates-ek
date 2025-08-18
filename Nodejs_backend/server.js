@@ -1,7 +1,6 @@
 // external packages
 const express = require('express');
 require('dotenv').config("./env");
-const test = require('./test.js');
 const cors = require('cors');
 const {createCertificate} = require('./certificate')
 const course_approval = require('./course_status');

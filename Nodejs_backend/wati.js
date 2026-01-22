@@ -170,7 +170,7 @@ const sendListInteractive = async (data, body, btnText, senderID) => {
         );
         console.log("Result returned", response.data);
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 }
 
@@ -192,12 +192,12 @@ const sendDynamicInteractiveMsg = async (data, body, senderID) => {
         );
         console.log(response.data);
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 }
 
 async function sendTemplateMessage(day, course_name, template_name, senderID) {
-    params = [{ 'name': "day", "value": day }, { 'name': "course_name", "value": course_name }]
+    const params = [{ 'name': "day", "value": day }, { 'name': "course_name", "value": course_name }]
     try {
         const response = await axios.post(
             'https://' + process.env.URL + '/api/v1/sendTemplateMessage/' + senderID,

@@ -1,17 +1,16 @@
 // external packages
 const express = require('express');
 require('dotenv').config("./env");
+const { validateEnvVariables } = require('./config/env-validator');
 const cors = require('cors');
+
+// Validate environment variables on startup
+validateEnvVariables();
 const {createCertificate} = require('./certificate')
 const course_approval = require('./course_status');
 var Airtable = require('airtable');
 const WA = require('./wati');
 const airtable = require("./airtable_methods");
-const outro = require('./outroflow');
-// const cert = require('./certificate')
-const mongoose = require("mongoose");
-const mongodb = require('./mongodb');
-const cop = require('./index');
 const fs = require('fs');
 const request = require('request');
 const webApp = express();
@@ -19,9 +18,16 @@ const { sendText, sendTemplateMessage ,sendMedia,sendInteractiveButtonsMessage ,
 const{solveUserQuery} = require('./llama.js');
 const { create } = require('domain');
 const { send } = require('process');
+const { validateWebhookEvent, errorHandler, requestLogger } = require('./middleware/validation');
+const { sanitizeForAirtable, sanitizeUserQuery, buildSafeAndFilter } = require('./utils/validators');
 
-webApp.use(express.json());
-webApp.use(cors());
+// Middleware
+webApp.use(express.json({ limit: '1mb' })); // Limit request body size
+webApp.use(cors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+    credentials: true
+}));
+webApp.use(requestLogger);
 
 
 const getStudentData_Created = async (waId) => {
@@ -29,8 +35,16 @@ const getStudentData_Created = async (waId) => {
     try {
         console.log("Getting student data....");
 
+        // Sanitize input to prevent injection
+        const safeWaId = sanitizeForAirtable(waId);
+        const filterFormula = buildSafeAndFilter([
+            { field: 'Course Status', value: 'Content Created' },
+            { field: 'Phone', value: safeWaId },
+            { field: 'Progress', value: 'Pending' }
+        ]);
+
         const records = await base('Student').select({
-            filterByFormula: `AND({Course Status} = 'Content Created', {Phone} = '${waId}',{Progress}='Pending')`,
+            filterByFormula: filterFormula,
         })
             .all();
         console.log(records);
@@ -38,6 +52,7 @@ const getStudentData_Created = async (waId) => {
         return filteredRecords; // Note : this returns list of objects
     } catch (error) {
         console.error("Failed getting approved data", error);
+        throw error; // Re-throw to allow caller to handle
     }
 }
 const updateStudentTableNextDayModule = async (waId, NextDay, NextModule) => {
@@ -58,9 +73,17 @@ const updateStudentTableNextDayModule = async (waId, NextDay, NextModule) => {
 
         console.log("Updating student data....");
 
+        // Sanitize input to prevent injection
+        const safeWaId = sanitizeForAirtable(waId);
+        const filterFormula = buildSafeAndFilter([
+            { field: 'Course Status', value: 'Content Created' },
+            { field: 'Phone', value: safeWaId },
+            { field: 'Progress', value: 'Pending' }
+        ]);
+
         // Fetching the record with the specified phone and other filters
         const records = await base('Student').select({
-            filterByFormula: `AND({Course Status} = 'Content Created', {Phone} = '${waId}', {Progress} = 'Pending')`,
+            filterByFormula: filterFormula,
         }).all();
 
         if (records.length === 0) {
@@ -98,8 +121,16 @@ const getStudentData_Pending = async (waId) => {
     try {
         console.log("Getting student data....");
 
+        // Sanitize input to prevent injection
+        const safeWaId = sanitizeForAirtable(waId);
+        const filterFormula = buildSafeAndFilter([
+            { field: 'Course Status', value: 'Content Created' },
+            { field: 'Phone', value: safeWaId },
+            { field: 'Progress', value: 'Pending' }
+        ]);
+
         const records = await base('Student').select({
-            filterByFormula: `AND({Course Status} = 'Content Created', {Phone} = '${waId}',{Progress}='Pending')`,
+            filterByFormula: filterFormula,
         })
             .all();
         console.log(records);
@@ -107,6 +138,7 @@ const getStudentData_Pending = async (waId) => {
         return filteredRecords; // Note : this returns list of objects
     } catch (error) {
         console.error("Failed getting approved data", error);
+        throw error; // Re-throw to allow caller to handle
     }
 }
 
@@ -201,9 +233,18 @@ const setDoubtBit = async (waId, doubtBit,Title) => {
     try {
         console.log("Setting doubt bit....");
 
+        // Sanitize inputs to prevent injection
+        const safeWaId = sanitizeForAirtable(waId);
+        const safeTitle = sanitizeForAirtable(Title);
+        const filterFormula = buildSafeAndFilter([
+            { field: 'Phone', value: safeWaId },
+            { field: 'Progress', value: 'Pending' },
+            { field: 'Topic', value: safeTitle }
+        ]);
+
         // Fetching the record with the specified phone and other filters
         const records = await base('Student').select({
-            filterByFormula: `AND({Phone} = '${waId}', {Progress} = 'Pending',{Topic}='${Title}')`,
+            filterByFormula: filterFormula,
         }).all();
 
         if (records.length === 0) {
@@ -237,9 +278,18 @@ const getDoubtBit = async (waId,Title) => {
     try {
         console.log("Getting doubt bit....");
 
+        // Sanitize inputs to prevent injection
+        const safeWaId = sanitizeForAirtable(waId);
+        const safeTitle = sanitizeForAirtable(Title);
+        const filterFormula = buildSafeAndFilter([
+            { field: 'Phone', value: safeWaId },
+            { field: 'Progress', value: 'Pending' },
+            { field: 'Topic', value: safeTitle }
+        ]);
+
         // Fetching the record with the specified phone and other filters
         const records = await base('Student').select({
-            filterByFormula: `AND({Phone} = '${waId}', {Progress} = 'Pending',{Topic}='${Title}')`,
+            filterByFormula: filterFormula,
         }).all();
 
         if (records.length === 0) {
@@ -261,7 +311,7 @@ webApp.get('/nextday', async (req, res) => {
     res.send("Sending Remainder to students");
 });
 
-webApp.post('/cop', async (req, res) => {
+webApp.post('/cop', validateWebhookEvent, async (req, res) => {
     const event = req.body;
 
 
@@ -331,7 +381,15 @@ webApp.post('/cop', async (req, res) => {
         if(flag && doubt==1){
             //User query
             console.log("User Query", event.text);
-            await solveUserQuery(event.text, event.waId);
+            try {
+                // Sanitize user query to prevent prompt injection
+                const sanitizedQuery = sanitizeUserQuery(event.text);
+                await solveUserQuery(sanitizedQuery, event.waId);
+            } catch (error) {
+                console.error("Invalid user query", error);
+                await sendText("Sorry, your query contains invalid content. Please rephrase and try again.", event.waId);
+                return res.sendStatus(200);
+            }
             setTimeout(async () => {
                 await sendInteractiveDualButtonsMessage(
                     `Hey👋 ${name}`, 
@@ -351,13 +409,48 @@ webApp.post('/cop', async (req, res) => {
 });
 
 
+// Health check endpoint (separated from business logic)
+webApp.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    });
+});
+
+// Legacy ping endpoint (triggers course approval)
 webApp.get("/ping", async (req, res) => {
     console.log("Pinging whatsapp server")
     course_approval.course_approval()
     res.send("Booting Up AI Engine.........")
 })
 
+// Error handler middleware (must be last)
+webApp.use(errorHandler);
+
 const port = process.env.port || 3000;
-webApp.listen(port, () => {
-    console.log(`Server is up and running at ${port}`);
+const server = webApp.listen(port, () => {
+    console.log(`✅ Server is up and running at port ${port}`);
+    console.log(`📊 Health check available at http://localhost:${port}/health`);
 });
+
+// Graceful shutdown handler
+function gracefulShutdown(signal) {
+    console.log(`\n${signal} received. Starting graceful shutdown...`);
+
+    server.close(() => {
+        console.log('✅ HTTP server closed');
+        console.log('👋 Process terminated gracefully');
+        process.exit(0);
+    });
+
+    // Force shutdown after 30 seconds
+    setTimeout(() => {
+        console.error('⚠️  Forced shutdown after timeout');
+        process.exit(1);
+    }, 30000);
+}
+
+// Listen for termination signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

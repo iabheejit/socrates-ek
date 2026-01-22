@@ -21,7 +21,7 @@ const getMessages = async (senderID, at) => {
         at = Number(at);
         const result = response.data;
         
-        if (result != undefined && result.messages && result.messages.items[at]) {
+        if (result?.messages?.items?.[at]) {
             return result.messages.items[at];
         }
     } catch (error) {
@@ -209,7 +209,7 @@ async function sendTemplateMessage(day, course_name, template_name, senderID) {
         const body = response.data;
         const result = body.result;
         
-        if (result == false) {
+        if (result === false) {
             console.log("WATI error " + JSON.stringify(body));
         }
         console.log("Res " + result);

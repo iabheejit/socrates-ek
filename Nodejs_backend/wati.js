@@ -1,51 +1,32 @@
-var request = require('request');
-require('dotenv').config("./env")
 const axios = require('axios');
+require('dotenv').config("./env")
 const FormData = require('form-data');
 const fs = require('fs');
 
 
 const getMessages = async (senderID, at) => {
-    return new Promise((resolve, reject) => {
-        var options = {
-            'method': 'GET',
-            'url': `https://${process.env.URL}/api/v1/getMessages/${senderID}`,
-            'headers': {
+    try {
+        const response = await axios({
+            method: 'GET',
+            url: `https://${process.env.URL}/api/v1/getMessages/${senderID}`,
+            headers: {
                 'Authorization': process.env.API
             },
-            formData: {
+            params: {
                 'pageSize': '10',
                 'pageNumber': '1'
             }
-        };
-        request(options, function (error, response) {
-            if (error) { console.log(error); }
-            else {
-                at = Number(at)
-                // console.log(typeof at)
-                try {
-                    // console.log("response.body ", response)
-                    result = JSON.parse(response.body)
-                    // console.log("result 1 ", result.messages.items[at]?.text)
-
-                    // console.log("result", result.messages)
-                    if (result != undefined) {
-
-                        last_text = result.messages.items[at].text
-
-                        resolve(result.messages.items[at]);
-                    }
-                }
-                catch (error) {
-                    console.log(error);
-                    //reject(e);
-                }
-            }
-
-
-
         });
-    })
+        
+        at = Number(at);
+        const result = response.data;
+        
+        if (result != undefined && result.messages && result.messages.items[at]) {
+            return result.messages.items[at];
+        }
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 
@@ -79,161 +60,163 @@ const sendMedia = async (buffer, filename, senderID, msg) => {
 
 
 const sendInteractiveButtonsMessage = async (hTxt, bTxt, btnTxt, senderID) => {
-    var options = {
-        'method': 'POST',
-        'url': 'https://' + process.env.URL + '/api/v1/sendInteractiveButtonsMessage?whatsappNumber=' + senderID,
-        'headers': {
-            'Authorization': process.env.API,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            "header": {
-                "type": "Text",
-                "text": hTxt
+    try {
+        const response = await axios({
+            method: 'POST',
+            url: 'https://' + process.env.URL + '/api/v1/sendInteractiveButtonsMessage?whatsappNumber=' + senderID,
+            headers: {
+                'Authorization': process.env.API,
+                'Content-Type': 'application/json',
             },
-            "body": bTxt,
-            "buttons": [
-                {
-                    "text": btnTxt
-                }
-            ]
-        })
-
-    };
-    request(options, function (error, response) {
-        if (error) console.log(error);
-        console.log(response.body);
-    });
+            data: {
+                "header": {
+                    "type": "Text",
+                    "text": hTxt
+                },
+                "body": bTxt,
+                "buttons": [
+                    {
+                        "text": btnTxt
+                    }
+                ]
+            }
+        });
+        console.log(response.data);
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const sendInteractiveDualButtonsMessage = async (hTxt, bTxt, btnTxt1, btnTxt2, senderID) => {
-    var options = {
-        'method': 'POST',
-        'url': 'https://' + process.env.URL + '/api/v1/sendInteractiveButtonsMessage?whatsappNumber=' + senderID,
-        'headers': {
-            'Authorization': process.env.API,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            "header": {
-                "type": "Text",
-                "text": hTxt
+    try {
+        const response = await axios({
+            method: 'POST',
+            url: 'https://' + process.env.URL + '/api/v1/sendInteractiveButtonsMessage?whatsappNumber=' + senderID,
+            headers: {
+                'Authorization': process.env.API,
+                'Content-Type': 'application/json',
             },
-            "body": bTxt,
-            "buttons": [
-                {
-                    "text": btnTxt1
+            data: {
+                "header": {
+                    "type": "Text",
+                    "text": hTxt
                 },
-                {
-                    "text": btnTxt2
-                }
-            ]
-        })
-
-    };
-    request(options, function (error, response) {
-        if (error) console.log(error);
-        console.log(response.body);
-    });
+                "body": bTxt,
+                "buttons": [
+                    {
+                        "text": btnTxt1
+                    },
+                    {
+                        "text": btnTxt2
+                    }
+                ]
+            }
+        });
+        console.log(response.data);
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const sendText = async (msg, senderID) => {
     console.log("Sending message to ", senderID);
-    var options = {
-        'method': 'POST',
-        'url': 'https://' + process.env.URL + '/api/v1/sendSessionMessage/' + senderID,
-        'headers': {
-            'Authorization': process.env.API,
-
-        },
-        formData: {
-            "messageText": msg,
-        }
-    };
-    request(options, function (error, response) {
-        body = JSON.parse(response.body)
-        result = body.result
-        //console.log(typeof result)
-        if (error) { console.log(error) }
-    });
+    try {
+        const FormData = require('form-data');
+        const form = new FormData();
+        form.append('messageText', msg);
+        
+        const response = await axios({
+            method: 'POST',
+            url: 'https://' + process.env.URL + '/api/v1/sendSessionMessage/' + senderID,
+            headers: {
+                'Authorization': process.env.API,
+                ...form.getHeaders()
+            },
+            data: form
+        });
+        
+        const body = response.data;
+        const result = body.result;
+    } catch (error) {
+        console.log(error);
+    }
 }
 const sendListInteractive = async (data, body, btnText, senderID) => {
-    var options = {
-        'method': 'POST',
-        'url': 'https://' + process.env.URL + '/api/v1/sendInteractiveListMessage?whatsappNumber=' + senderID,
-        'headers': {
-            'Authorization': process.env.API,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            "header": "",
-            "body": body,
-            "footer": "",
-            "buttonText": btnText,
-            "sections": [
-                {
-                    "title": "Options",
-                    "rows": data
-                }
-            ]
-        })
-
-    };
-    request(options, function (error, response) {
-        if (error) throw new Error(error);
-        console.log("Result returned", response.body);
-
-    });
+    try {
+        const response = await axios({
+            method: 'POST',
+            url: 'https://' + process.env.URL + '/api/v1/sendInteractiveListMessage?whatsappNumber=' + senderID,
+            headers: {
+                'Authorization': process.env.API,
+                'Content-Type': 'application/json',
+            },
+            data: {
+                "header": "",
+                "body": body,
+                "footer": "",
+                "buttonText": btnText,
+                "sections": [
+                    {
+                        "title": "Options",
+                        "rows": data
+                    }
+                ]
+            }
+        });
+        console.log("Result returned", response.data);
+    } catch (error) {
+        throw new Error(error);
+    }
 }
 
 
 const sendDynamicInteractiveMsg = async (data, body, senderID) => {
-
-    var options = {
-        'method': 'POST',
-        'url': 'https://' + process.env.URL + '/api/v1/sendInteractiveButtonsMessage?whatsappNumber=' + senderID,
-        'headers': {
-            'Authorization': process.env.API,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            "body": body,
-            "buttons": data
-        })
-
-    };
-    request(options, function (error, response) {
-        if (error) throw new Error(error);
-        console.log(response.body);
-    });
-
+    try {
+        const response = await axios({
+            method: 'POST',
+            url: 'https://' + process.env.URL + '/api/v1/sendInteractiveButtonsMessage?whatsappNumber=' + senderID,
+            headers: {
+                'Authorization': process.env.API,
+                'Content-Type': 'application/json',
+            },
+            data: {
+                "body": body,
+                "buttons": data
+            }
+        });
+        console.log(response.data);
+    } catch (error) {
+        throw new Error(error);
+    }
 }
 
 async function sendTemplateMessage(day, course_name, template_name, senderID) {
-    params = [{ 'name': "day", "value": day }, { 'name': "course_name", "value": course_name }]
-    var options = {
-        'method': 'POST',
-        'url': 'https://' + process.env.URL + '/api/v1/sendTemplateMessage/' + senderID,
-        'headers': {
-            'Authorization': process.env.API,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            "template_name": template_name,
-            "broadcast_name": template_name,
-            "parameters": JSON.stringify(params)
-        })
-
-    };
-    request(options, function (error, response) {
-        body = JSON.parse(response.body)
-        result = body.result
-        //console.log(typeof result)
-        if (error || result == false)
-            console.log("WATI error " + response.body)
-
+    const params = [{ 'name': "day", "value": day }, { 'name': "course_name", "value": course_name }];
+    try {
+        const response = await axios({
+            method: 'POST',
+            url: 'https://' + process.env.URL + '/api/v1/sendTemplateMessage/' + senderID,
+            headers: {
+                'Authorization': process.env.API,
+                'Content-Type': 'application/json',
+            },
+            data: {
+                "template_name": template_name,
+                "broadcast_name": template_name,
+                "parameters": JSON.stringify(params)
+            }
+        });
+        
+        const body = response.data;
+        const result = body.result;
+        
+        if (result == false) {
+            console.log("WATI error " + JSON.stringify(body));
+        }
         console.log("Res " + result);
-    });
+    } catch (error) {
+        console.log("WATI error", error);
+    }
 }
 
 module.exports = {

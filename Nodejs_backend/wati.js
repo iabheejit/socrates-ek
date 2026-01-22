@@ -22,8 +22,7 @@ const getMessages = async (senderID, at) => {
         at = Number(at);
         const result = response.data;
         
-        if (result !== undefined && result.messages && result.messages.items) {
-            const last_text = result.messages.items[at].text;
+        if (result !== undefined && result.messages && result.messages.items && result.messages.items[at]) {
             return result.messages.items[at];
         }
     } catch (error) {

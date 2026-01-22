@@ -217,7 +217,7 @@ async function sendTemplateMessage(day, course_name, template_name, senderID) {
         const body = response.data;
         const result = body.result;
         //console.log(typeof result)
-        if (result == false) {
+        if (result === false) {
             console.log("WATI error " + JSON.stringify(response.data))
         }
         console.log("Res " + result);

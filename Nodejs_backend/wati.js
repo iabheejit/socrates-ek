@@ -121,7 +121,6 @@ const sendInteractiveDualButtonsMessage = async (hTxt, bTxt, btnTxt1, btnTxt2, s
 const sendText = async (msg, senderID) => {
     console.log("Sending message to ", senderID);
     try {
-        const FormData = require('form-data');
         const form = new FormData();
         form.append('messageText', msg);
         
@@ -165,7 +164,7 @@ const sendListInteractive = async (data, body, btnText, senderID) => {
         });
         console.log("Result returned", response.data);
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 }
 
@@ -186,7 +185,7 @@ const sendDynamicInteractiveMsg = async (data, body, senderID) => {
         });
         console.log(response.data);
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 }
 

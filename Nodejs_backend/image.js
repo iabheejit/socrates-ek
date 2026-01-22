@@ -93,7 +93,7 @@ async function load(uri, path, number) {
         responseType: 'arraybuffer'
     });
     
-    const buffer = Buffer.from(response.data, 'binary');
+    const buffer = Buffer.from(response.data);
     WA.sendMedia(buffer, path, number);
 }
 module.exports = { sendMediaFile, sendMediaFile_v2 }

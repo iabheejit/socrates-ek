@@ -1,9 +1,8 @@
 const WA = require('./wati');
 const airtable = require("./airtable_methods");
+const { generateCourse } = require('./llama');
 require('dotenv').config();
 let axios = require('axios');
-let cop = require('./index');
-let openaiModule = require('./OpenAI');
 
 // let Airtable = require('airtable');
 let course_base = process.env.course_base
@@ -46,7 +45,7 @@ async function find_course_to_create() {
 
 async function course_approval() {
     try {
-        openaiModule.generateCourse();
+        await generateCourse();
     } catch (error) {
         console.log("Error generating course", error);
     }

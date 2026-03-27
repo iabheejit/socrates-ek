@@ -1,4 +1,4 @@
-const request = require('request-promise')
+const axios = require('axios');
 const WA = require('./wati');
 const us = require('./airtable_methods.js')
 var Airtable = require('airtable');
@@ -87,14 +87,14 @@ async function sendMediaFile_v2(index, cDay, cModule, number) {
 
 
 async function load(uri, path, number) {
-    const options = {
-        uri: uri,
-        encoding: null
-    };
-    const body = await request(options)
-
-    WA.sendMedia(body, path, number)
-
+    const response = await axios({
+        url: uri,
+        method: 'GET',
+        responseType: 'arraybuffer'
+    });
+    
+    const buffer = Buffer.from(response.data);
+    WA.sendMedia(buffer, path, number);
 }
 module.exports = { sendMediaFile, sendMediaFile_v2 }
 

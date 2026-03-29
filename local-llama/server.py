@@ -41,7 +41,7 @@ CORS(app)
 connected_clients = set()
 
 # Server-side model selection
-USE_LOCAL_MODEL = False  # Set this to False to use the Tune AI API
+USE_LOCAL_MODEL = False  # Set to True to use the local model; keep False to use the Tune AI API
 
 # Function to get local IP address
 def get_local_ip():

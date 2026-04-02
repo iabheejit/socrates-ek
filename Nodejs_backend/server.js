@@ -12,7 +12,6 @@ var Airtable = require('airtable');
 const WA = require('./wati');
 const airtable = require("./airtable_methods");
 const fs = require('fs');
-const request = require('request');
 const webApp = express();
 const { sendText, sendTemplateMessage ,sendMedia,sendInteractiveButtonsMessage , sendInteractiveDualButtonsMessage} = require('./wati');
 const{solveUserQuery} = require('./llama.js');
